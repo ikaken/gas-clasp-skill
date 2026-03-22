@@ -74,6 +74,52 @@ node_modules/
 }
 ```
 
+## プロジェクトタイプ別の作成方法
+
+clasp でプロジェクトを作成する際、`--type` オプションでプロジェクトタイプを指定できる：
+
+```bash
+# スタンドアロンスクリプト（デフォルト）
+clasp create-script --type standalone
+
+# スプレッドシート連携
+clasp create-script --type sheets
+
+# ドキュメント連携
+clasp create-script --type docs
+
+# スライド連携
+clasp create-script --type slides
+
+# フォーム連携
+clasp create-script --type forms
+
+# Webアプリ
+clasp create-script --type webapp
+
+# API実行可能スクリプト
+clasp create-script --type api
+```
+
+### Webアプリプロジェクトの OAuth スコープ
+
+Webアプリとしてデプロイする場合、カスタム OAuth クライアントを使用する際は以下のスコープが必要：
+
+```
+https://www.googleapis.com/auth/script.webapp.deploy
+```
+
+その他の clasp 関連スコープ：
+
+```
+https://www.googleapis.com/auth/script.deployments
+https://www.googleapis.com/auth/script.projects
+https://www.googleapis.com/auth/drive.metadata.readonly
+https://www.googleapis.com/auth/drive.file
+```
+
+詳細は clasp の公式ドキュメントを参照。
+
 ## プロジェクトタイプ別の推奨構成
 
 ### スプレッドシート連携

@@ -82,6 +82,9 @@ npm run pull
 # GASエディタを開く
 npm run open
 
+# デプロイ済みWebアプリをブラウザで開く
+npx clasp open-web-app
+
 # プッシュ対象ファイルの確認
 npx clasp status
 ```
@@ -96,18 +99,59 @@ npx clasp status
 
 ### 6. デプロイ（WebアプリやAPIとして公開する場合）
 
+#### 基本的なデプロイコマンド
+
 ```bash
-# バージョン作成＋デプロイ
-clasp deploy --description "v1.0.0 - 説明"
+# 新規デプロイ（新しいバージョンとデプロイを作成）
+clasp create-deployment --description "v1.0.0 - 説明"
+
+# 特定バージョンで新規デプロイ
+clasp create-deployment --versionNumber 4
 
 # デプロイ一覧の確認
-clasp deployments
+clasp list-deployments
 
 # バージョン一覧の確認
-clasp versions
+clasp list-versions
+
+# バージョン作成のみ
+clasp create-version "バージョンの説明"
 ```
 
-コード変更後は `clasp push` だけでなく、新しいバージョンを発行して `deploy` し直す必要がある。
+#### Webアプリのデプロイ
+
+**重要**: Webアプリの場合、各デプロイには一意のURLが割り当てられる。
+
+```bash
+# 新規Webアプリデプロイ（新しいURLが発行される）
+clasp create-deployment --description "初回リリース"
+
+# 既存デプロイの更新（URLを変えずに更新）
+clasp create-deployment --deploymentId <デプロイID> --description "更新"
+# または
+clasp update-deployment <デプロイID> --description "更新"
+
+# デプロイされたWebアプリをブラウザで開く
+clasp open-web-app
+```
+
+#### デプロイIDの確認方法
+
+```bash
+clasp list-deployments
+```
+
+出力例：
+```
+- AKfyc... @1 - 初回リリース
+- AKfyc... @2 - 更新版
+```
+
+#### 注意事項
+
+- コード変更後は `clasp push` だけでなく、新しいバージョンを発行して `deploy` し直す必要がある
+- Webアプリで既存のURLを維持したい場合は、必ず `--deploymentId` を指定して更新する
+- 新規デプロイを作成すると新しいURLが発行されるため、URLを共有している場合は注意
 
 ### 7. パフォーマンス最適化
 
