@@ -79,11 +79,65 @@ gas-clasp-skill/
 
 このスキルが対象とする GAS + clasp 開発環境には以下が必要です。
 
-- **Node.js** 18 以上
+- **Node.js 22.0.0 以上**
 - **npm**
-- **@google/clasp** 2.4 以上
+- **@google/clasp 3.0 以上**
 - Apps Script API が有効化されていること（[設定ページ](https://script.google.com/home/usersettings)）
 - `npx clasp login` で Google アカウントにログイン済みであること
+
+## ⚠️ clasp バージョンに関する重要な注意事項
+
+### clasp 3.x と 2.x の違い
+
+**このスキルは clasp 3.x に対応しています。** clasp のバージョンによってコマンド名や機能が大きく異なるため、必ず環境のバージョンを確認してください。
+
+```bash
+# バージョン確認
+clasp --version
+```
+
+### 主な違い
+
+| 項目 | clasp 2.x | clasp 3.x（本スキル対応） |
+|------|-----------|---------------------------|
+| **Node.js 要件** | 12+ 以上 | **22.0.0 以上** |
+| **TypeScript** | 自動トランスパイル対応 | **廃止（バンドラー必須）** |
+| **コマンド名** | `clasp create` | `clasp create-script` |
+| | `clasp clone` | `clasp clone-script` |
+| | `clasp open` | `clasp open-script` |
+| | `clasp status` | `clasp show-file-status` |
+| | `clasp deployments` | `clasp list-deployments` |
+| | `clasp versions` | `clasp list-versions` |
+
+### バージョン確認の重要性
+
+clasp のバージョンによって以下のような問題が発生する可能性があります：
+
+- **コマンドが見つからない** — 古いバージョンでは新しいコマンド名が使えない
+- **TypeScript が動かない** — clasp 3.x では自動トランスパイルが廃止されている
+- **Node.js バージョンエラー** — clasp 3.x は Node.js 22+ が必須
+
+### 推奨される対応
+
+1. **環境のバージョンを確認**
+   ```bash
+   node --version   # 22.0.0 以上であることを確認
+   clasp --version  # 3.0.0 以上であることを確認
+   ```
+
+2. **clasp 2.x を使用している場合**
+   - clasp 3.x へのアップグレードを推奨
+   - アップグレードできない場合は、スキル内の `references/migration-to-3x.md` を参照してコマンド名を読み替える
+
+3. **TypeScript を使用する場合**
+   - clasp 3.x ではバンドラー（Rollup、Webpack、esbuild など）が必須
+   - 詳細は `gas-clasp/references/typescript-support.md` を参照
+
+### 移行ガイド
+
+clasp 2.x から 3.x への移行方法については、スキル内の以下のドキュメントを参照してください：
+
+- `gas-clasp/references/migration-to-3x.md` — 詳細な移行手順とコマンド対照表
 
 ## ライセンス
 

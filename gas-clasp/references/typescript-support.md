@@ -1,36 +1,107 @@
-# TypeScript対応
+# TypeScript対応（clasp 3.x）
 
-claspはTypeScript（`.ts`）ファイルをサポートしており、push時に自動的にJavaScriptへトランスパイルされる。
+**重要**: clasp 3.x では TypeScript の自動トランスパイル機能が廃止されました。
 
-## プロジェクト構成
+TypeScript を使用する場合は、**バンドラー（Rollup、Webpack、esbuild など）を使って事前にトランスパイルする必要があります**。
+
+## clasp 3.x での TypeScript 利用方法
+
+### オプション1: 推奨テンプレートプロジェクトを使用
+
+以下の公式推奨テンプレートを利用すると、TypeScript + バンドラーの環境が整っています：
+
+- [apps-script-engine-template](https://github.com/WildH0g/apps-script-engine-template)
+- [clasp-typescript-template](https://github.com/tomoyanakano/clasp-typescript-template)
+- [aside](https://github.com/google/aside)
+- [apps-script-typescript-rollup-starter](https://github.com/sqrrrl/apps-script-typescript-rollup-starter)
+
+### オプション2: 手動でバンドラーを設定
+
+#### プロジェクト構成例（Rollup使用）
 
 ```
 project-root/
 ├── src/
-│   ├── appsscript.json    # GASマニフェスト
-│   ├── main.ts            # TypeScriptファイル
+│   ├── main.ts            # TypeScriptソース
 │   └── utils.ts
+├── dist/                  # ビルド出力先（clasp push対象）
+│   ├── appsscript.json
+│   └── Code.js            # トランスパイル済み
 ├── .clasp.json
 ├── .claspignore
 ├── package.json
-└── tsconfig.json           # TypeScript設定
+├── tsconfig.json
+└── rollup.config.js       # Rollup設定
 ```
 
-## tsconfig.json
+#### tsconfig.json
 
 ```json
 {
   "compilerOptions": {
-    "lib": ["esnext"],
-    "target": "esnext",
+    "target": "ES2019",
+    "module": "ESNext",
+    "lib": ["ES2019"],
     "strict": true,
-    "noImplicitAny": true,
-    "skipLibCheck": true
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "moduleResolution": "node",
+    "outDir": "./dist"
+  },
+  "include": ["src/**/*"]
+}
+```
+
+#### rollup.config.js（例）
+
+```javascript
+import typescript from '@rollup/plugin-typescript';
+import { nodeResolve } from '@rollup/plugin-node-resolve';
+
+export default {
+  input: 'src/main.ts',
+  output: {
+    file: 'dist/Code.js',
+    format: 'iife',
+    name: 'GasApp'
+  },
+  plugins: [
+    nodeResolve(),
+    typescript()
+  ]
+};
+```
+
+#### package.json
+
+```json
+{
+  "scripts": {
+    "build": "rollup -c",
+    "push": "npm run build && clasp push",
+    "deploy": "npm run build && clasp create-deployment"
+  },
+  "devDependencies": {
+    "@google/clasp": "^3.0.0",
+    "@types/google-apps-script": "^1.0.83",
+    "@rollup/plugin-node-resolve": "^15.0.0",
+    "@rollup/plugin-typescript": "^11.0.0",
+    "rollup": "^4.0.0",
+    "typescript": "^5.0.0"
   }
 }
 ```
 
-> **注意**: claspが内部でトランスパイルを行うため、`module` や `outDir` の指定は不要。
+#### .clasp.json
+
+```json
+{
+  "scriptId": "your-script-id",
+  "rootDir": "dist"
+}
+```
+
+**重要**: `rootDir` を `dist` に設定し、ビルド済みファイルのみを push する。
 
 ## 型定義の活用
 

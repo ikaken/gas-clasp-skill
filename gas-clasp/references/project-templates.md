@@ -63,12 +63,15 @@ node_modules/
   "scripts": {
     "push": "clasp push",
     "pull": "clasp pull",
-    "open": "clasp open",
-    "version": "clasp version",
-    "deploy": "clasp deploy"
+    "open": "clasp open-script",
+    "open:web": "clasp open-web-app",
+    "status": "clasp show-file-status",
+    "version": "clasp create-version",
+    "deploy": "clasp create-deployment",
+    "deployments": "clasp list-deployments"
   },
   "devDependencies": {
-    "@google/clasp": "^2.4.2",
+    "@google/clasp": "^3.0.0",
     "@types/google-apps-script": "^1.0.83"
   }
 }
@@ -76,29 +79,32 @@ node_modules/
 
 ## プロジェクトタイプ別の作成方法
 
-clasp でプロジェクトを作成する際、`--type` オプションでプロジェクトタイプを指定できる：
+clasp 3.x でプロジェクトを作成する際、`--type` オプションでプロジェクトタイプを指定できる：
 
 ```bash
 # スタンドアロンスクリプト（デフォルト）
-clasp create-script --type standalone
+clasp create-script --type standalone --title "プロジェクト名" --rootDir src
 
 # スプレッドシート連携
-clasp create-script --type sheets
+clasp create-script --type sheets --title "プロジェクト名" --rootDir src
 
 # ドキュメント連携
-clasp create-script --type docs
+clasp create-script --type docs --title "プロジェクト名" --rootDir src
 
 # スライド連携
-clasp create-script --type slides
+clasp create-script --type slides --title "プロジェクト名" --rootDir src
 
 # フォーム連携
-clasp create-script --type forms
+clasp create-script --type forms --title "プロジェクト名" --rootDir src
 
 # Webアプリ
-clasp create-script --type webapp
+clasp create-script --type webapp --title "プロジェクト名" --rootDir src
 
 # API実行可能スクリプト
-clasp create-script --type api
+clasp create-script --type api --title "プロジェクト名" --rootDir src
+
+# 既存プロジェクトのクローン
+clasp clone-script <スクリプトID> --rootDir src
 ```
 
 ### Webアプリプロジェクトの OAuth スコープ
