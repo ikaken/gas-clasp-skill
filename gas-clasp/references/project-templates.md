@@ -2,6 +2,47 @@
 
 ## 必須ファイルの作成例
 
+### `.clasp.json`
+
+プロジェクトルートに配置する clasp の設定ファイル：
+
+```json
+{
+  "scriptId": "your-script-id",
+  "rootDir": "src",
+  "projectId": "your-gcp-project-id",
+  "filePushOrder": ["config.js", "utils.js", "main.js"]
+}
+```
+
+#### 設定項目
+
+- **`scriptId`** (必須): GAS プロジェクトの ID
+- **`rootDir`** (オプション): ソースコードのディレクトリ（デフォルト: カレントディレクトリ）
+- **`projectId`** (オプション): Google Cloud Platform プロジェクト ID（`clasp run` や `clasp logs` で必要）
+- **`filePushOrder`** (オプション): ファイルのプッシュ順序を指定
+
+#### `filePushOrder` の使い方
+
+GAS では**ファイルの読み込み順序**が実行に影響する場合があります。`filePushOrder` でプッシュ順序を制御できます：
+
+```json
+{
+  "scriptId": "your-script-id",
+  "rootDir": "src",
+  "filePushOrder": ["config.js", "utils.js", "main.js"]
+}
+```
+
+**使用例**:
+- `config.js` でグローバル変数を定義
+- `utils.js` でヘルパー関数を定義
+- `main.js` でメイン処理を実行
+
+**注意**:
+- `filePushOrder` に指定されていないファイルは、その後にアルファベット順でプッシュされます
+- ファイルパスは `rootDir` からの相対パスで指定します
+
 ### `src/appsscript.json`
 
 ```json
@@ -28,6 +69,10 @@
 
 ### `.claspignore`
 
+`.claspignore` は `clasp push` 時にアップロードから除外するファイルを指定します。
+
+#### 基本的な `.claspignore` の例
+
 ```
 node_modules/**
 .git/**
@@ -42,6 +87,47 @@ tsconfig.json
 ```
 
 **重要**: `.clasp.json` は環境固有の設定（デプロイ先やスクリプトID等）を含むため、原則Git管理から除外する。
+
+#### `.claspignore` が存在しない場合のデフォルト動作
+
+`.claspignore` ファイルが存在しない場合、clasp は以下のデフォルトパターンを自動的に適用します：
+
+```text
+# すべてのファイルを除外…
+**/**
+
+# 以下の拡張子のみ許可…
+!appsscript.json
+!**/*.gs
+!**/*.js
+!**/*.ts
+!**/*.html
+
+# 以下のディレクトリは常に除外…
+.git/**
+node_modules/**
+```
+
+つまり、`.claspignore` を作成しない場合でも、`node_modules` や `.git` は自動的に除外されます。
+
+#### `.gitignore` との違い
+
+**重要**: `.claspignore` のパターンは [multimatch](https://github.com/sindresorhus/multimatch) で処理されるため、`.gitignore` とは異なります。
+
+**ディレクトリを除外する場合の違い**:
+
+```text
+# .gitignore の場合
+node_modules/
+
+# .claspignore の場合（** が必要）
+node_modules/**
+**/node_modules/**
+```
+
+**パターンの適用基準**:
+- `.claspignore` のパターンは `rootDir` からの相対パスで適用されます
+- ディレクトリを除外する場合は `**/ディレクトリ名/**` の形式を推奨
 
 ### `.gitignore`
 
@@ -107,24 +193,39 @@ clasp create-script --type api --title "プロジェクト名" --rootDir src
 clasp clone-script <スクリプトID> --rootDir src
 ```
 
-### Webアプリプロジェクトの OAuth スコープ
+### カスタム OAuth クライアントの設定
 
-Webアプリとしてデプロイする場合、カスタム OAuth クライアントを使用する際は以下のスコープが必要：
+カスタム OAuth クライアントを使用する場合（セキュリティやコンプライアンス要件がある環境）、以下の手順で設定します：
 
-```
-https://www.googleapis.com/auth/script.webapp.deploy
-```
+1. [Google Cloud Console](https://console.cloud.google.com/) で新規プロジェクトを作成
+2. OAuth クライアントを作成（クライアントタイプ: **Desktop Application**）
+3. 必要な API を有効化：
+   - Apps Script API (`script.googleapis.com`) - 必須
+   - Service Usage API (`serviceusage.googleapis.com`) - API 管理に必要
+   - Google Drive API (`drive.googleapis.com`) - スクリプト一覧、コンテナバインドスクリプト作成に必要
+   - Cloud Logging API (`logging.googleapis.com`) - ログ表示に必要
 
-その他の clasp 関連スコープ：
+#### 必要な OAuth スコープ（完全版）
+
+外部ユーザーに公開する場合、以下のスコープを OAuth 同意画面に登録する必要があります：
 
 ```
 https://www.googleapis.com/auth/script.deployments
 https://www.googleapis.com/auth/script.projects
+https://www.googleapis.com/auth/script.webapp.deploy
 https://www.googleapis.com/auth/drive.metadata.readonly
 https://www.googleapis.com/auth/drive.file
+https://www.googleapis.com/auth/service.management
+https://www.googleapis.com/auth/logging.read
+https://www.googleapis.com/auth/userinfo.email
+https://www.googleapis.com/auth/userinfo.profile
+https://www.googleapis.com/auth/cloud-platform
 ```
 
-詳細は clasp の公式ドキュメントを参照。
+**ログイン方法**:
+```bash
+clasp login --user myproject --creds client_secret.json
+```
 
 ## プロジェクトタイプ別の推奨構成
 

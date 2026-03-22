@@ -225,7 +225,8 @@ GASコードを生成する際は、パフォーマンスを考慮する：
 ## Supporting Resources
 
 - references/migration-to-3x.md — **clasp 2.x から 3.x への移行ガイド（重要）**
-- references/project-templates.md — 必須ファイルのテンプレートとプロジェクトタイプ別推奨構成
+- references/project-templates.md — 必須ファイルのテンプレート（`.clasp.json`, `.claspignore` のデフォルト動作、`filePushOrder` など）
+- references/advanced-commands.md — **高度な clasp コマンド**（複数ユーザー管理、`clasp run-function`, ログ表示、API 管理）
 - references/gas-language-constraints.md — GAS固有の言語仕様・制約
 - references/typescript-support.md — TypeScript対応（clasp 3.x ではバンドラー必須）
 - references/performance-optimization.md — パフォーマンス最適化パターン
