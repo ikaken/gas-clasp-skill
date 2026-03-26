@@ -45,6 +45,10 @@ GAS では**ファイルの読み込み順序**が実行に影響する場合が
 
 ### `src/appsscript.json`
 
+Apps Script プロジェクトのマニフェストファイル。基本設定と Web アプリ設定を含みます。
+
+#### 基本的な構成
+
 ```json
 {
   "timeZone": "Asia/Tokyo",
@@ -54,6 +58,51 @@ GAS では**ファイルの読み込み順序**が実行に影響する場合が
   "oauthScopes": []
 }
 ```
+
+#### Web アプリ用の設定（`webapp` エントリ）
+
+Web アプリとして公開する場合、`webapp` エントリを追加します：
+
+```json
+{
+  "timeZone": "Asia/Tokyo",
+  "dependencies": {},
+  "exceptionLogging": "STACKDRIVER",
+  "runtimeVersion": "V8",
+  "webapp": {
+    "executeAs": "USER_DEPLOYING",
+    "access": "ANYONE_ANONYMOUS"
+  },
+  "oauthScopes": []
+}
+```
+
+**重要**: `appsscript.json` の `webapp` 設定は**デフォルト値**です。実際のデプロイ時には GAS エディタの UI で設定を上書きできます（UI の設定が優先されます）。
+
+##### `executeAs` パラメータ（実行ユーザー）
+
+| 値 | 説明 | 推奨 |
+|---|---|---|
+| `USER_DEPLOYING` | デプロイしたユーザーとして実行 | ✅ 通常はこれ |
+| `USER_ACCESSING` | アクセスしているユーザーとして実行 | - |
+| `SERVICE_ACCOUNT` | サービスアカウントとして実行 | - |
+| `UNKNOWN_EXECUTE_AS` | 未定義 | - |
+
+**推奨**: `USER_DEPLOYING` を使用することで、Web アプリは常にデプロイしたユーザーの権限で実行されます。
+
+##### `access` パラメータ（アクセス権限）
+
+| 値 | 説明 | 推奨 |
+|---|---|---|
+| `MYSELF` | 自分のみアクセス可能 | - |
+| `DOMAIN` | 同一 Google Workspace ドメイン内のユーザー | - |
+| `ANYONE` | Google ログインが必要な全員 | - |
+| `ANYONE_ANONYMOUS` | ログイン不要で誰でもアクセス可能 | ✅ 外部公開用 |
+| `UNKNOWN_ACCESS` | 未定義 | - |
+
+**推奨**: 外部に公開する Web アプリの場合は `ANYONE_ANONYMOUS` を使用します。
+
+#### OAuth スコープの設定
 
 `oauthScopes` はプロジェクトに必要なスコープのみ追加する：
 

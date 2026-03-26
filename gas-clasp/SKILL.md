@@ -137,22 +137,89 @@ clasp create-version "バージョンの説明"
 
 #### Webアプリのデプロイ
 
-**重要**: Webアプリの場合、各デプロイには一意のURLが割り当てられる。
+##### 前提理解（重要）
+
+GAS の Web アプリ公開は**2層構造**になっています：
+
+| レイヤー | 役割 | 優先度 |
+|---------|------|--------|
+| `appsscript.json` の `webapp` エントリ | デフォルト設定 | 低 |
+| GAS エディタ（GUI） | **実際の公開設定** | **高（優先される）** |
+
+**結論**: 最終的な公開状態は **GAS エディタの GUI 設定が決定します**。
+
+##### ステップ1: `appsscript.json` の設定
+
+`src/appsscript.json` に `webapp` エントリを追加（デフォルト値として）：
+
+```json
+{
+  "timeZone": "Asia/Tokyo",
+  "dependencies": {},
+  "exceptionLogging": "STACKDRIVER",
+  "runtimeVersion": "V8",
+  "webapp": {
+    "executeAs": "USER_DEPLOYING",
+    "access": "ANYONE_ANONYMOUS"
+  }
+}
+```
+
+詳細は `references/project-templates.md` の「Web アプリ用の設定」を参照。
+
+##### ステップ2: clasp でデプロイ
 
 ```bash
-# 新規Webアプリデプロイ（新しいURLが発行される）
+# 初回デプロイ（新しいURLが発行される）
+clasp push -f
 clasp create-deployment --description "初回リリース"
 
 # 既存デプロイの更新（URLを変えずに更新）
-clasp create-deployment --deploymentId <デプロイID> --description "更新"
+clasp push -f
+clasp create-deployment --deploymentId <デプロイID> --description "更新内容"
 # または
-clasp update-deployment <デプロイID> --description "更新"
+clasp update-deployment <デプロイID> --description "更新内容"
 
 # デプロイされたWebアプリをブラウザで開く
 clasp open-web-app
 ```
 
-#### デプロイIDの確認方法
+**効率化**: `package.json` に登録しておくと便利
+
+```json
+"scripts": {
+  "deploy": "clasp push -f && clasp create-deployment -i <デプロイID> -d 'update'"
+}
+```
+
+##### ステップ3: GAS エディタで最終確認（初回必須）
+
+⚠️ **最重要**: `appsscript.json` で `ANYONE_ANONYMOUS` を指定しても、**そのままでは全員公開にならない場合があります**。
+
+**初回デプロイ後、必ず以下の手順を実行**：
+
+1. `clasp open-script` で GAS エディタを開く
+2. 右上の「デプロイ」→「デプロイを管理」をクリック
+3. 対象デプロイの ⚙️（歯車アイコン）→「デプロイを編集」をクリック
+4. **アクセス権限を確認・設定**：
+   - 外部公開する場合: **「全員」を選択**
+   - ログイン不要にする場合: **「全員（匿名ユーザーを含む）」を選択**
+5. 「デプロイ」ボタンをクリックして保存
+
+**なぜ必要か**: Google の仕様上、`appsscript.json` は初期値であり、GUI 設定が最終決定権を持つため。
+
+##### ステップ4: 2回目以降の更新
+
+初回の GUI 設定後は、clasp のみで更新可能：
+
+```bash
+clasp push -f
+clasp create-deployment --deploymentId <デプロイID> --description "更新"
+```
+
+URL も公開状態も維持されます。
+
+##### デプロイIDの確認方法
 
 ```bash
 clasp list-deployments
@@ -160,37 +227,28 @@ clasp list-deployments
 
 出力例：
 ```
-- AKfyc... @1 - 初回リリース
-- AKfyc... @2 - 更新版
+- AKfycby... @1 - 初回リリース
+- AKfycby... @2 - 更新版
 ```
 
-#### デプロイ設定の制約と手順
+##### よくあるトラブルと対処法
 
-**重要**: clasp コマンドでは以下の設定ができません。これらは **GAS エディタで手動設定が必須** です：
+| 問題 | 原因 | 対処法 |
+|------|------|--------|
+| 外部からアクセスできない | GUI で「全員」になっていない | GUI で「全員（匿名ユーザーを含む）」に変更 |
+| ログインを求められる | `ANYONE` になっている | `appsscript.json` を `ANYONE_ANONYMOUS` に変更 + GUI 確認 |
+| URL が変わってしまう | `--deploymentId` を付けずに deploy | 必ず `--deploymentId` を指定して更新 |
 
-- **デプロイの種類**（Web アプリ / API 実行可能ファイル / アドオン）
-- **実行ユーザー**（自分 / アクセスしているユーザー）
-- **アクセスできるユーザー**（自分のみ / 全員）
+##### 運用ベストプラクティス
 
-**GAS エディタでの設定手順**：
+✅ **初回**:
+1. clasp でデプロイ
+2. **必ず GUI で「全員」公開を確認**
 
-1. `clasp open-script` で GAS エディタを開く
-2. 右上の「デプロイ」→「デプロイを管理」をクリック
-3. 対象デプロイの ⚙️（歯車アイコン）→「デプロイを編集」をクリック
-4. 以下を設定：
-   - **種類**: ウェブアプリ / API 実行可能ファイル / アドオン
-   - **実行ユーザー**: 自分 / アクセスしているユーザー
-   - **アクセスできるユーザー**: 自分のみ / 全員
+✅ **2回目以降**:
+- clasp のみで OK（URL も公開状態も維持）
 
-**セキュリティ上の注意**：
-- 「実行ユーザー: 自分」にすると、呼び出し元に自分の権限が付与される
-- 公開範囲は必要最小限に設定する（不要な場合は「自分のみ」を選択）
-
-#### その他の注意事項
-
-- コード変更後は `clasp push` だけでなく、新しいバージョンを発行して `deploy` し直す必要がある
-- Webアプリで既存のURLを維持したい場合は、必ず `--deploymentId` を指定して更新する
-- 新規デプロイを作成すると新しいURLが発行されるため、URLを共有している場合は注意
+**結論**: 「clasp で管理 + 初回だけ GUI 確定」が最も安定した運用方法
 
 ### 7. パフォーマンス最適化
 
