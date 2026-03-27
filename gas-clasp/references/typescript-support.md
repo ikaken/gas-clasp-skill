@@ -135,12 +135,13 @@ function getSheetData() {
 
 ## TypeScript使用時の注意点
 
-### import / export は使えない
+### import / export の扱い
 
-GASはES Modulesに対応していないため、TypeScriptでも `import` / `export` は使用不可。claspのトランスパイルはモジュール解決を行わない。
+GAS ランタイム自体は ES Modules に対応していないため、最終的にアップロードするコードでは `import` / `export` は使用できません。
 
+**バンドラーを使わない場合**（非推奨）:
 ```typescript
-// NG: import/export はトランスパイル後にエラーになる
+// NG: GAS ランタイムでエラーになる
 import { helper } from './utils';
 export function main() {}
 
@@ -151,6 +152,24 @@ function main() {
 
 function helper() {
   return 'ok';
+}
+```
+
+**バンドラーを使う場合**（推奨）:
+
+Rollup 等のバンドラーがモジュール解決を行うため、ソースコード上では `import` / `export` を自由に使用できます。バンドラーが最終的に1つの JS ファイルにまとめるため、GAS ランタイムの制約を回避できます。
+
+```typescript
+// src/utils.ts — バンドラー使用時は import/export OK
+export function helper(): string {
+  return 'ok';
+}
+
+// src/main.ts
+import { helper } from './utils';
+
+function main() {
+  const result = helper();
 }
 ```
 

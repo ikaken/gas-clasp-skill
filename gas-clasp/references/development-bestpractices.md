@@ -7,7 +7,7 @@ GASとclaspを用いた開発において、全体を通して意識すべきベ
 3. **エラーハンドリング**: `try-catch` でエラーを適切に処理し、ログに記録する。ユーザーにわかりやすいエラーメッセージを返す。
 4. **ログ出力**: `console.log()` でCloud Loggingに出力する（GASエディタで確認可能）。デバッグ情報を適切に残す。
 5. **秘密情報**: スクリプトプロパティで管理し、コードやGitHubリポジトリ（`.clasp.json`, `.env`等）には絶対に書かない。（※詳細は [セキュリティベストプラクティス](./security-bestpractices.md) 参照）
-6. **バージョン管理**: 重要な変更前に `clasp version --description "説明"` でバージョンを作成する。Webアプリとして公開する場合のみ `clasp deploy` を使用する。
+6. **バージョン管理**: 重要な変更前に `clasp create-version "説明"` でバージョンを作成する。Webアプリとして公開する場合のみ `clasp create-deployment` を使用する。
 7. **バッチ処理**: スプレッドシート操作は必ず `getValues()` / `setValues()` で一括処理し、API呼び出しを最小限にする。（※詳細は [パフォーマンス最適化](./performance-optimization.md) 参照）
 8. **実行時間監視**: 長時間処理は分割し、GASの実行時間制限（6分）以内に収める。（※詳細は [パフォーマンス最適化](./performance-optimization.md) 参照）
 9. **テスト**: 本番データで直接テストせず、テスト用の別シートを作成するか、テスト用関数を用意する。（※詳細は [テスト手法](./testing-strategies.md) 参照）

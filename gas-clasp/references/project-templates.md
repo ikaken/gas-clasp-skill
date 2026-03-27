@@ -19,20 +19,12 @@
 
 - **`scriptId`** (必須): GAS プロジェクトの ID
 - **`rootDir`** (オプション): ソースコードのディレクトリ（デフォルト: カレントディレクトリ）
-- **`projectId`** (オプション): Google Cloud Platform プロジェクト ID（`clasp run` や `clasp logs` で必要）
+- **`projectId`** (オプション): Google Cloud Platform プロジェクト ID（`clasp run-function` や `clasp tail-logs` で必要）
 - **`filePushOrder`** (オプション): ファイルのプッシュ順序を指定
 
 #### `filePushOrder` の使い方
 
-GAS では**ファイルの読み込み順序**が実行に影響する場合があります。`filePushOrder` でプッシュ順序を制御できます：
-
-```json
-{
-  "scriptId": "your-script-id",
-  "rootDir": "src",
-  "filePushOrder": ["config.js", "utils.js", "main.js"]
-}
-```
+GAS では**ファイルの読み込み順序**が実行に影響する場合があります。上記テンプレートのように `filePushOrder` でプッシュ順序を制御できます。
 
 **使用例**:
 - `config.js` でグローバル変数を定義

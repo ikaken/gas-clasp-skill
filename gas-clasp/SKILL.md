@@ -137,118 +137,15 @@ clasp create-version "バージョンの説明"
 
 #### Webアプリのデプロイ
 
-##### 前提理解（重要）
+Web アプリ（`doGet` / `doPost`）を外部に公開する場合の要点：
 
-GAS の Web アプリ公開は**2層構造**になっています：
+1. `src/appsscript.json` に `webapp` エントリを追加（`executeAs`, `access` を設定）
+2. `clasp push -f` でコードをプッシュ（`-f`: ローカルのマニフェストでリモートを上書き）
+3. `clasp create-deployment --description "説明"` で初回デプロイ
+4. ⚠️ **初回は `clasp open-script` で GAS エディタを開き、GUI でアクセス権限を確認**（`appsscript.json` の設定だけでは公開が確定しない）
+5. 2回目以降は `clasp update-deployment <デプロイID>` のみで URL も公開状態も維持
 
-| レイヤー | 役割 | 優先度 |
-|---------|------|--------|
-| `appsscript.json` の `webapp` エントリ | デフォルト設定 | 低 |
-| GAS エディタ（GUI） | **実際の公開設定** | **高（優先される）** |
-
-**結論**: 最終的な公開状態は **GAS エディタの GUI 設定が決定します**。
-
-##### ステップ1: `appsscript.json` の設定
-
-`src/appsscript.json` に `webapp` エントリを追加（デフォルト値として）：
-
-```json
-{
-  "timeZone": "Asia/Tokyo",
-  "dependencies": {},
-  "exceptionLogging": "STACKDRIVER",
-  "runtimeVersion": "V8",
-  "webapp": {
-    "executeAs": "USER_DEPLOYING",
-    "access": "ANYONE_ANONYMOUS"
-  }
-}
-```
-
-詳細は `references/project-templates.md` の「Web アプリ用の設定」を参照。
-
-##### ステップ2: clasp でデプロイ
-
-```bash
-# 初回デプロイ（新しいURLが発行される）
-clasp push -f
-clasp create-deployment --description "初回リリース"
-
-# 既存デプロイの更新（URLを変えずに更新）
-clasp push -f
-clasp create-deployment --deploymentId <デプロイID> --description "更新内容"
-# または
-clasp update-deployment <デプロイID> --description "更新内容"
-
-# デプロイされたWebアプリをブラウザで開く
-clasp open-web-app
-```
-
-**効率化**: `package.json` に登録しておくと便利
-
-```json
-"scripts": {
-  "deploy": "clasp push -f && clasp create-deployment -i <デプロイID> -d 'update'"
-}
-```
-
-##### ステップ3: GAS エディタで最終確認（初回必須）
-
-⚠️ **最重要**: `appsscript.json` で `ANYONE_ANONYMOUS` を指定しても、**そのままでは全員公開にならない場合があります**。
-
-**初回デプロイ後、必ず以下の手順を実行**：
-
-1. `clasp open-script` で GAS エディタを開く
-2. 右上の「デプロイ」→「デプロイを管理」をクリック
-3. 対象デプロイの ⚙️（歯車アイコン）→「デプロイを編集」をクリック
-4. **アクセス権限を確認・設定**：
-   - 外部公開する場合: **「全員」を選択**
-   - ログイン不要にする場合: **「全員（匿名ユーザーを含む）」を選択**
-5. 「デプロイ」ボタンをクリックして保存
-
-**なぜ必要か**: Google の仕様上、`appsscript.json` は初期値であり、GUI 設定が最終決定権を持つため。
-
-##### ステップ4: 2回目以降の更新
-
-初回の GUI 設定後は、clasp のみで更新可能：
-
-```bash
-clasp push -f
-clasp create-deployment --deploymentId <デプロイID> --description "更新"
-```
-
-URL も公開状態も維持されます。
-
-##### デプロイIDの確認方法
-
-```bash
-clasp list-deployments
-```
-
-出力例：
-```
-- AKfycby... @1 - 初回リリース
-- AKfycby... @2 - 更新版
-```
-
-##### よくあるトラブルと対処法
-
-| 問題 | 原因 | 対処法 |
-|------|------|--------|
-| 外部からアクセスできない | GUI で「全員」になっていない | GUI で「全員（匿名ユーザーを含む）」に変更 |
-| ログインを求められる | `ANYONE` になっている | `appsscript.json` を `ANYONE_ANONYMOUS` に変更 + GUI 確認 |
-| URL が変わってしまう | `--deploymentId` を付けずに deploy | 必ず `--deploymentId` を指定して更新 |
-
-##### 運用ベストプラクティス
-
-✅ **初回**:
-1. clasp でデプロイ
-2. **必ず GUI で「全員」公開を確認**
-
-✅ **2回目以降**:
-- clasp のみで OK（URL も公開状態も維持）
-
-**結論**: 「clasp で管理 + 初回だけ GUI 確定」が最も安定した運用方法
+詳細な手順・トラブルシューティングは references/webapp-deployment.md を参照。
 
 ### 7. パフォーマンス最適化
 
@@ -285,6 +182,7 @@ GASコードを生成する際は、パフォーマンスを考慮する：
 - references/migration-to-3x.md — **clasp 2.x から 3.x への移行ガイド（重要）**
 - references/project-templates.md — 必須ファイルのテンプレート（`.clasp.json`, `.claspignore` のデフォルト動作、`filePushOrder` など）
 - references/advanced-commands.md — **高度な clasp コマンド**（複数ユーザー管理、`clasp run-function`, ログ表示、API 管理）
+- references/webapp-deployment.md — **Web アプリのデプロイ手順**（2層構造、GUI 確認、トラブルシューティング）
 - references/gas-language-constraints.md — GAS固有の言語仕様・制約
 - references/typescript-support.md — TypeScript対応（clasp 3.x ではバンドラー必須）
 - references/performance-optimization.md — パフォーマンス最適化パターン

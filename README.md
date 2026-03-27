@@ -13,6 +13,9 @@ gas-clasp-skill/
     ├── SKILL.md                               # スキル定義ファイル（メインエントリ）
     └── references/                            # 参照ドキュメント群
         ├── project-templates.md               # プロジェクトテンプレート集
+        ├── migration-to-3x.md                 # clasp 2.x → 3.x 移行ガイド
+        ├── advanced-commands.md               # 高度な clasp コマンド
+        ├── webapp-deployment.md               # Web アプリデプロイ手順
         ├── gas-language-constraints.md         # GAS 言語仕様・制約
         ├── typescript-support.md               # TypeScript 対応ガイド
         ├── performance-optimization.md         # パフォーマンス最適化
@@ -29,7 +32,7 @@ gas-clasp-skill/
 スキルのメインエントリファイルです。以下の情報を定義しています。
 
 - **メタデータ** — スキル名、説明、ライセンス、互換性情報
-- **前提条件** — Node.js 18+、Apps Script API の有効化、clasp ログイン
+- **前提条件** — Node.js 22+、clasp 3.0+、Apps Script API の有効化、clasp ログイン
 - **手順** — プロジェクト構成の作成から開発・デプロイまでのステップバイステップガイド
 - **エラーハンドリング** — よくあるエラーと対処法
 - **適用条件** — どのようなユーザーリクエストでこのスキルが発動するか
@@ -41,11 +44,14 @@ gas-clasp-skill/
 | ファイル | 内容 |
 | --- | --- |
 | `project-templates.md` | `appsscript.json`、`package.json`、`.claspignore` 等の必須ファイルテンプレートと、プロジェクトタイプ別の推奨構成 |
-| `gas-language-constraints.md` | ES Modules 非対応、Node.js/ブラウザ API 非対応など GAS 固有の言語制約。コード生成時に必ず参照される |
-| `typescript-support.md` | clasp での TypeScript 利用方法、プロジェクト構成、トランスパイル時の制約事項 |
-| `performance-optimization.md` | バッチ処理、API 呼び出し削減、CacheService 活用など GAS パフォーマンス最適化パターン |
-| `testing-strategies.md` | テスト用関数による手動テスト、アサーション手法など GAS 向けテスト戦略 |
-| `development-bestpractices.md` | ファイル分割、命名規則など GAS 開発全般のベストプラクティス |
+| `migration-to-3x.md` | clasp 2.x から 3.x への移行ガイド、コマンド対照表 |
+| `advanced-commands.md` | 複数ユーザー管理、`clasp run-function`、ログ表示、API 管理など高度なコマンド |
+| `webapp-deployment.md` | Web アプリのデプロイ手順、GUI 確認、トラブルシューティング |
+| `gas-language-constraints.md` | ES Modules 非対応、Node.js/ブラウザ API 非対応など GAS 固有の言語制約 |
+| `typescript-support.md` | clasp 3.x での TypeScript 利用方法（バンドラー必須） |
+| `performance-optimization.md` | バッチ処理、API 呼び出し削減、CacheService 活用など最適化パターン |
+| `testing-strategies.md` | テスト用関数、アサーション、テスト用シート運用など GAS 向けテスト戦略 |
+| `development-bestpractices.md` | ファイル分割、定数管理、ログ出力など GAS 開発全般のベストプラクティス |
 | `quotas-and-limits.md` | スクリプト実行時間、API 呼び出し回数など GAS の制限値一覧 |
 | `security-bestpractices.md` | 秘密情報の管理（PropertiesService）、OAuth スコープの最小化、入力値検証 |
 
@@ -102,42 +108,9 @@ clasp --version
 |------|-----------|---------------------------|
 | **Node.js 要件** | 12+ 以上 | **22.0.0 以上** |
 | **TypeScript** | 自動トランスパイル対応 | **廃止（バンドラー必須）** |
-| **コマンド名** | `clasp create` | `clasp create-script` |
-| | `clasp clone` | `clasp clone-script` |
-| | `clasp open` | `clasp open-script` |
-| | `clasp status` | `clasp show-file-status` |
-| | `clasp deployments` | `clasp list-deployments` |
-| | `clasp versions` | `clasp list-versions` |
+| **コマンド名** | 大幅に変更 | 詳細は `references/migration-to-3x.md` 参照 |
 
-### バージョン確認の重要性
-
-clasp のバージョンによって以下のような問題が発生する可能性があります：
-
-- **コマンドが見つからない** — 古いバージョンでは新しいコマンド名が使えない
-- **TypeScript が動かない** — clasp 3.x では自動トランスパイルが廃止されている
-- **Node.js バージョンエラー** — clasp 3.x は Node.js 22+ が必須
-
-### 推奨される対応
-
-1. **環境のバージョンを確認**
-   ```bash
-   node --version   # 22.0.0 以上であることを確認
-   clasp --version  # 3.0.0 以上であることを確認
-   ```
-
-2. **clasp 2.x を使用している場合**
-   - clasp 3.x へのアップグレードを推奨
-   - アップグレードできない場合は、スキル内の `references/migration-to-3x.md` を参照してコマンド名を読み替える
-
-3. **TypeScript を使用する場合**
-   - clasp 3.x ではバンドラー（Rollup、Webpack、esbuild など）が必須
-   - 詳細は `gas-clasp/references/typescript-support.md` を参照
-
-### 移行ガイド
-
-clasp 2.x から 3.x への移行方法については、スキル内の以下のドキュメントを参照してください：
-
-- `gas-clasp/references/migration-to-3x.md` — 詳細な移行手順とコマンド対照表
+バージョンの違いによる問題（コマンドが見つからない、TypeScript が動かない、Node.js エラー等）とその対処法については `gas-clasp/references/migration-to-3x.md` を参照してください。
 
 ## ライセンス
 
