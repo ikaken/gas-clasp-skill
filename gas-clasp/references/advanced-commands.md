@@ -52,7 +52,7 @@ clasp login --extra-scopes https://www.googleapis.com/auth/spreadsheets.readonly
 ```
 
 **使用例**:
-- `clasp run` でスクリプトを実行する際、スクリプトが必要とするスコープを事前に認証
+- `clasp run-function` でスクリプトを実行する際、スクリプトが必要とするスコープを事前に認証
 - カスタム OAuth クライアントで特定のスコープのみを許可
 
 ### ローカルサーバーを使わないログイン
@@ -266,7 +266,7 @@ DEBUG=clasp:* clasp push
 
 ### プロジェクト ID が見つからない
 
-`clasp run` や `clasp logs` で「Project ID が必要」というエラーが出る場合：
+`clasp run-function` や `clasp tail-logs` で「Project ID が必要」というエラーが出る場合：
 
 1. GAS エディタを開く: `clasp open-script`
 2. 「プロジェクトの設定」→「Google Cloud Platform (GCP) プロジェクト」

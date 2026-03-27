@@ -100,10 +100,10 @@ npm run pull
 npm run open
 
 # デプロイ済みWebアプリをブラウザで開く
-npx clasp open-web-app
+npm run open:web
 
 # プッシュ対象ファイルの確認
-npx clasp show-file-status
+npm run status
 ```
 
 ### 5. GASエディタでの設定

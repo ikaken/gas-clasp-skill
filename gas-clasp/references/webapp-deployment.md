@@ -20,19 +20,13 @@ GAS の Web アプリ公開設定は**2層構造**になっています：
 `src/appsscript.json` に `webapp` エントリを追加（デフォルト値として）：
 
 ```json
-{
-  "timeZone": "Asia/Tokyo",
-  "dependencies": {},
-  "exceptionLogging": "STACKDRIVER",
-  "runtimeVersion": "V8",
-  "webapp": {
-    "executeAs": "USER_DEPLOYING",
-    "access": "ANYONE_ANONYMOUS"
-  }
+"webapp": {
+  "executeAs": "USER_DEPLOYING",
+  "access": "ANYONE_ANONYMOUS"
 }
 ```
 
-`webapp` エントリの各パラメータの詳細は `references/project-templates.md` の「Web アプリ用の設定」を参照。
+JSON 全体のテンプレートや `executeAs` / `access` の各パラメータ詳細は `references/project-templates.md` の「Web アプリ用の設定」を参照。
 
 ### ステップ2: clasp でデプロイ
 
@@ -55,7 +49,7 @@ clasp open-web-app
 
 ```json
 "scripts": {
-  "deploy": "clasp push -f && clasp create-deployment -i <デプロイID> -d 'update'"
+  "deploy": "clasp push -f && clasp update-deployment <デプロイID> -d 'update'"
 }
 ```
 
