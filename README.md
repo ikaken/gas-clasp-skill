@@ -1,116 +1,229 @@
 # gas-clasp スキル
 
-Google Apps Script (GAS) + clasp を使った開発を支援する Windsurf スキルです。
+Google Apps Script (GAS) + clasp を使った開発を支援する AI エディタ向けスキル集です。
 
-AI エージェントが GAS プロジェクトのセットアップ、コード生成、デプロイを行う際に、GAS 固有の言語制約やベストプラクティスを自動的に参照し、正しいコードと開発フローを提供します。
+## 元リポジトリからの変更点
 
-## スキルのフォルダ構造
+元のスキル（Fork元）は、GASコードを修正するたびにスキルを手動実行してデプロイする方式でした。
+
+本リポジトリでは、スキルを**2つに分割**し、**GitHub Actionsによる自動デプロイ**に対応しました。
+
+| 項目 | Fork元（旧） | 本リポジトリ（新） |
+|------|-------------|-------------------|
+| **スキル構成** | 1つ（セットアップ〜デプロイまで一体） | 2つに分割（初期化 + CI/CD） |
+| **デプロイ方法** | コード変更のたびにスキルを手動実行 | **mainブランチへのpushで自動デプロイ** |
+| **CI/CD** | なし | GitHub Actions で `clasp push` + `clasp create-deployment` を自動実行 |
+| **Secrets管理** | 手動 | `gh secret set` でコマンドから自動登録 |
+| **対応エディタ** | Windsurf のみ | Windsurf / Cursor / Claude Code / Antigravity / Codex |
+| **clasp対応** | 3.x | 3.x（認証構造を3.x形式に対応済み） |
+
+## スキル一覧
+
+| スキル | 説明 | 実行タイミング |
+|--------|------|---------------|
+| **gas-clasp** | GASプロジェクトの自動初期化（環境チェック → プロジェクト作成 → 設定ファイル生成 → 初回プッシュ） | プロジェクト作成時に1回 |
+| **gas-setup-cicd** | GitHub Actionsによる自動デプロイのセットアップ（Secrets自動登録 → ワークフロー生成） | CI/CD設定時に1回 |
+
+初期セットアップ後は、`src/` 内のコードを変更して `git push` するだけで自動的にGASにデプロイされます。
+
+## 対応エディタ
+
+| エディタ | 対応状況 |
+|---------|---------|
+| **Windsurf** | SKILL.md 形式で対応 |
+| **Cursor** | commands 形式で対応 |
+| **Claude Code** | commands 形式で対応 |
+| **Antigravity** | SKILL.md 形式で対応 |
+| **Codex** | SKILL.md 形式で対応 |
+
+## フォルダ構造
 
 ```
 gas-clasp-skill/
-├── README.md                                  # 本ファイル（スキルの説明）
-└── gas-clasp/
-    ├── SKILL.md                               # スキル定義ファイル（メインエントリ）
-    └── references/                            # 参照ドキュメント群
-        ├── project-templates.md               # プロジェクトテンプレート集
-        ├── migration-to-3x.md                 # clasp 2.x → 3.x 移行ガイド
-        ├── advanced-commands.md               # 高度な clasp コマンド
-        ├── webapp-deployment.md               # Web アプリデプロイ手順
-        ├── gas-language-constraints.md         # GAS 言語仕様・制約
-        ├── typescript-support.md               # TypeScript 対応ガイド
-        ├── performance-optimization.md         # パフォーマンス最適化
-        ├── testing-strategies.md               # テスト手法
-        ├── development-bestpractices.md        # 開発ベストプラクティス
-        ├── quotas-and-limits.md                # GAS クォータ・制限値
-        └── security-bestpractices.md           # セキュリティベストプラクティス
+├── README.md
+├── gas-clasp/                          # GASプロジェクト初期化スキル
+│   ├── SKILL.md                        # スキル定義（Windsurf / Antigravity 共通）
+│   └── references/                     # 参照ドキュメント群
+│       ├── project-templates.md
+│       ├── migration-to-3x.md
+│       ├── advanced-commands.md
+│       ├── webapp-deployment.md
+│       ├── gas-language-constraints.md
+│       ├── typescript-support.md
+│       ├── performance-optimization.md
+│       ├── testing-strategies.md
+│       ├── development-bestpractices.md
+│       ├── quotas-and-limits.md
+│       └── security-bestpractices.md
+└── gas-clasp-cicd/                     # CI/CD セットアップスキル
+    └── SKILL.md                        # スキル定義（Windsurf / Antigravity 共通）
 ```
 
-## 各ファイルの説明
+## 使い方
 
-### `gas-clasp/SKILL.md`
+### 全体の流れ
 
-スキルのメインエントリファイルです。以下の情報を定義しています。
+```
+1. GitHub で空のリポジトリを作成 → ローカルにクローン
 
-- **メタデータ** — スキル名、説明、ライセンス、互換性情報
-- **前提条件** — Node.js 22+、clasp 3.0+、Apps Script API の有効化、clasp ログイン
-- **手順** — プロジェクト構成の作成から開発・デプロイまでのステップバイステップガイド
-- **エラーハンドリング** — よくあるエラーと対処法
-- **適用条件** — どのようなユーザーリクエストでこのスキルが発動するか
+2. gas-clasp スキルを実行（初回のみ）
+   → 環境チェック（Node.js, clasp バージョン）
+   → プロジェクト名・タイプを質問
+   → clasp create-script でGASプロジェクト作成
+   → package.json, .gitignore, src/main.js 等を自動生成
+   → clasp push で初回プッシュ
 
-### `gas-clasp/references/`
+3. gas-setup-cicd スキルを実行（初回のみ）
+   → ~/.clasprc.json から認証情報を読み取り
+   → gh secret set で GitHub Secrets に自動登録
+   → .github/workflows/deploy-gas.yml を自動生成
 
-`SKILL.md` から参照される詳細ドキュメントを格納するディレクトリです。
+4. Webアプリの場合: 初回デプロイ後にGASエディタで手動確認（初回のみ）
+   → clasp open-script でGASエディタを開く
+   → 「デプロイ」→「デプロイを管理」でアクセス権限を確認・設定
+   → これはGoogleの仕様上、GUIでの設定が最終決定権を持つため必須
+   ※ sheets/docs 等のWebアプリ以外のタイプでは不要
 
-| ファイル | 内容 |
-| --- | --- |
-| `project-templates.md` | `appsscript.json`、`package.json`、`.claspignore` 等の必須ファイルテンプレートと、プロジェクトタイプ別の推奨構成 |
-| `migration-to-3x.md` | clasp 2.x から 3.x への移行ガイド、コマンド対照表 |
-| `advanced-commands.md` | 複数ユーザー管理、`clasp run-function`、ログ表示、API 管理など高度なコマンド |
-| `webapp-deployment.md` | Web アプリのデプロイ手順、GUI 確認、トラブルシューティング |
-| `gas-language-constraints.md` | ES Modules 非対応、Node.js/ブラウザ API 非対応など GAS 固有の言語制約 |
-| `typescript-support.md` | clasp 3.x での TypeScript 利用方法（バンドラー必須） |
-| `performance-optimization.md` | バッチ処理、API 呼び出し削減、CacheService 活用など最適化パターン |
-| `testing-strategies.md` | テスト用関数、アサーション、テスト用シート運用など GAS 向けテスト戦略 |
-| `development-bestpractices.md` | ファイル分割、定数管理、ログ出力など GAS 開発全般のベストプラクティス |
-| `quotas-and-limits.md` | スクリプト実行時間、API 呼び出し回数など GAS の制限値一覧 |
-| `security-bestpractices.md` | 秘密情報の管理（PropertiesService）、OAuth スコープの最小化、入力値検証 |
+5. 以降の開発（スキル実行不要）
+   → src/ 内のコードを編集
+   → git add → git commit → git push
+   → GitHub Actions が自動で clasp push + create-deployment を実行
+```
 
-## 利用方法
+> **注意（Webアプリの場合）**: 初回デプロイ時のみ、GASエディタでアクセス権限の手動確認が必要です。`appsscript.json` の `webapp` 設定は初期値にすぎず、GASエディタのGUI設定が最終決定権を持つというGoogleの仕様があるためです。2回目以降は `git push` による自動デプロイのみで動作します。
 
-### 1. スキルのインストール
+### 各エディタでの実行方法
 
-本スキルフォルダ (`gas-clasp/`) を Windsurf のスキルディレクトリに配置します。
+| エディタ | gas-clasp | gas-setup-cicd |
+|---------|-----------|----------------|
+| **Windsurf** | 「GASプロジェクトをセットアップして」と入力 | 「GitHub Actionsで自動デプロイを設定して」と入力 |
+| **Cursor** | `/gas-clasp` と入力 | `/gas-setup-cicd` と入力 |
+| **Claude Code** | `/gas-clasp` と入力 | `/gas-setup-cicd` と入力 |
+| **Antigravity** | 「GASプロジェクトをセットアップして」と入力 | 「GitHub Actionsで自動デプロイを設定して」と入力 |
+| **Codex** | `$gas-clasp` と入力、または「GASプロジェクトをセットアップして」 | `$gas-setup-cicd` と入力、または「CI/CDを設定して」 |
 
-### 2. スキルの発動
+## インストール方法
 
-以下のようなリクエストを Windsurf に送ると、このスキルが自動的に適用されます。
-
-- 「GAS プロジェクトをセットアップして」
-- 「clasp で新しいスプレッドシート連携スクリプトを作って」
-- 「Google Apps Script でWeb APIを作りたい」
-- 「既存の GAS プロジェクトをクローンして編集したい」
-
-### 3. スキルが提供するサポート
-
-スキル適用時、AI エージェントは以下を自動的に行います。
-
-1. **環境確認** — Node.js、clasp のインストール状況とログイン状態を確認
-2. **プロジェクト構成の作成** — `SKILL.md` の推奨構成に従い、必要なファイルを生成（テンプレートは `references/project-templates.md` を参照）
-3. **GAS コードの生成** — `references/gas-language-constraints.md` の制約を遵守したコードを出力
-4. **パフォーマンス考慮** — `references/performance-optimization.md` に基づく最適化を適用
-5. **セキュリティ確認** — `references/security-bestpractices.md` に従い、秘密情報の安全な管理を徹底
-6. **デプロイ支援** — clasp コマンドによるバージョン作成・デプロイを実行
-
-## 動作要件
-
-このスキルが対象とする GAS + clasp 開発環境には以下が必要です。
-
-- **Node.js 22.0.0 以上**
-- **npm**
-- **@google/clasp 3.0 以上**
-- Apps Script API が有効化されていること（[設定ページ](https://script.google.com/home/usersettings)）
-- `npx clasp login` で Google アカウントにログイン済みであること
-
-## ⚠️ clasp バージョンに関する重要な注意事項
-
-### clasp 3.x と 2.x の違い
-
-**このスキルは clasp 3.x に対応しています。** clasp のバージョンによってコマンド名や機能が大きく異なるため、必ず環境のバージョンを確認してください。
+### Windsurf
 
 ```bash
-# バージョン確認
-clasp --version
+# グローバル（全プロジェクトで使用）
+cp -r gas-clasp ~/.windsurf/skills/gas-clasp
+cp -r gas-clasp-cicd ~/.windsurf/skills/gas-clasp-cicd
+
+# プロジェクトローカル
+cp -r gas-clasp .windsurf/skills/gas-clasp
+cp -r gas-clasp-cicd .windsurf/skills/gas-clasp-cicd
 ```
 
-### 主な違い
+### Cursor
+
+```bash
+# プロジェクトローカル
+mkdir -p .cursor/commands
+cp gas-clasp/SKILL.md .cursor/commands/gas-clasp.md
+cp gas-clasp-cicd/SKILL.md .cursor/commands/gas-setup-cicd.md
+```
+
+> **注意**: references/ フォルダの参照ドキュメントも活用したい場合は、`.cursor/rules/` にルールとして追加するか、プロジェクトルートに `gas-clasp/references/` を配置してください。
+
+### Claude Code
+
+```bash
+# グローバル（全プロジェクトで使用・推奨）
+mkdir -p ~/.claude/commands
+cp gas-clasp/SKILL.md ~/.claude/commands/gas-clasp.md
+cp gas-clasp-cicd/SKILL.md ~/.claude/commands/gas-setup-cicd.md
+
+# プロジェクトローカル
+mkdir -p .claude/commands
+cp gas-clasp/SKILL.md .claude/commands/gas-clasp.md
+cp gas-clasp-cicd/SKILL.md .claude/commands/gas-setup-cicd.md
+```
+
+### Antigravity
+
+```bash
+# グローバル（全プロジェクトで使用）
+cp -r gas-clasp ~/.gemini/antigravity/skills/gas-clasp
+cp -r gas-clasp-cicd ~/.gemini/antigravity/skills/gas-clasp-cicd
+
+# プロジェクトローカル
+cp -r gas-clasp .agents/skills/gas-clasp
+cp -r gas-clasp-cicd .agents/skills/gas-clasp-cicd
+```
+
+### Codex
+
+```bash
+# グローバル（全プロジェクトで使用）
+mkdir -p ~/.agents/skills
+cp -r gas-clasp ~/.agents/skills/gas-clasp
+cp -r gas-clasp-cicd ~/.agents/skills/gas-clasp-cicd
+
+# プロジェクトローカル
+mkdir -p .agents/skills
+cp -r gas-clasp .agents/skills/gas-clasp
+cp -r gas-clasp-cicd .agents/skills/gas-clasp-cicd
+```
+
+## 事前準備
+
+### 必須
+
+- **Node.js 22.0.0 以上**
+- **@google/clasp 3.0 以上** (`npm install -g @google/clasp@latest`)
+- **Apps Script API** が有効化されていること（[設定ページ](https://script.google.com/home/usersettings)）
+- `clasp login` で Google アカウントにログイン済み
+
+### CI/CD セットアップ時に追加で必要
+
+- **gh CLI** がインストール・認証済み（`gh auth login`）
+- GitHub リポジトリへの書き込み権限
+
+### clasp 認証トークンの取得方法
+
+```bash
+# 1. clasp をインストール
+npm install -g @google/clasp@latest
+
+# 2. ログイン（ブラウザが開く）
+clasp login
+
+# 3. ~/.clasprc.json が生成される（clasp 3.x 形式）
+#    gas-setup-cicd スキルがこのファイルを自動で読み取り GitHub Secrets に登録する
+```
+
+clasp 3.x の `~/.clasprc.json` 構造:
+
+```json
+{
+  "tokens": {
+    "default": {
+      "access_token": "ya29.xxx...",
+      "refresh_token": "1//xxx...",
+      "client_id": "xxx.apps.googleusercontent.com",
+      "client_secret": "xxx",
+      "token_type": "Bearer",
+      "expiry_date": 1234567890000,
+      "type": "authorized_user"
+    }
+  }
+}
+```
+
+## clasp バージョンについて
+
+**このスキルは clasp 3.x に対応しています。**
 
 | 項目 | clasp 2.x | clasp 3.x（本スキル対応） |
 |------|-----------|---------------------------|
-| **Node.js 要件** | 12+ 以上 | **22.0.0 以上** |
-| **TypeScript** | 自動トランスパイル対応 | **廃止（バンドラー必須）** |
-| **コマンド名** | 大幅に変更 | 詳細は `references/migration-to-3x.md` 参照 |
+| **Node.js 要件** | 12+ | **22.0.0 以上** |
+| **TypeScript** | 自動トランスパイル | **廃止（バンドラー必須）** |
+| **コマンド名** | `create`, `clone` | `create-script`, `clone-script` |
+| **認証ファイル構造** | `token` + `oauth2ClientSettings` | `tokens.default` に統合 |
 
-バージョンの違いによる問題（コマンドが見つからない、TypeScript が動かない、Node.js エラー等）とその対処法については `gas-clasp/references/migration-to-3x.md` を参照してください。
+詳細は `gas-clasp/references/migration-to-3x.md` を参照。
 
 ## ライセンス
 
